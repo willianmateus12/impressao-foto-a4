@@ -320,8 +320,15 @@ impl App {
     fn real_rect(&self, idx: usize) -> Option<RectMm> {
         let ph = self.photos.get(idx)?;
         let area = self.print_area();
-        let w = (ph.phys_mm.0 * ph.crop.width()).max(MIN_SIZE_MM);
-        let h = (ph.phys_mm.1 * ph.crop.height()).max(MIN_SIZE_MM);
+        let mut w = (ph.phys_mm.0 * ph.crop.width()).max(MIN_SIZE_MM);
+        let mut h = (ph.phys_mm.1 * ph.crop.height()).max(MIN_SIZE_MM);
+        // Maior que a área de impressão: reduz mantendo a proporção, para a
+        // foto inteira aparecer em vez de ser cortada pelas bordas
+        let k = (area.w / w).min(area.h / h);
+        if k < 1.0 {
+            w *= k;
+            h *= k;
+        }
         Some(RectMm {
             x: area.x + (area.w - w) / 2.0,
             y: area.y + (area.h - h) / 2.0,
@@ -410,8 +417,9 @@ impl App {
                     w: (cell.w - 2.0 * m).max(MIN_SIZE_MM),
                     h: (cell.h - 2.0 * m).max(MIN_SIZE_MM),
                 };
-                ph.crop = cover_crop(ph.img_aspect, (d.w / d.h).max(0.001));
-                ph.dest = d;
+                // Encaixa a foto inteira na célula sem cortar (mantém o
+                // recorte que o usuário já tiver feito)
+                ph.dest = fit_rect(d, ph.crop_aspect());
             }
         }
     }
@@ -1628,18 +1636,6 @@ fn frame_of(dest: RectMm, m: f32) -> RectMm {
         y: dest.y - m,
         w: dest.w + 2.0 * m,
         h: dest.h + 2.0 * m,
-    }
-}
-
-/// Recorte (uv 0..1) que faz a imagem cobrir completamente uma célula com a
-/// proporção `target_aspect`, centralizado (estilo "cover", sem distorcer).
-fn cover_crop(img_aspect: f32, target_aspect: f32) -> Rect {
-    if img_aspect > target_aspect {
-        let w = (target_aspect / img_aspect).clamp(0.01, 1.0);
-        Rect::from_min_size(Pos2::new((1.0 - w) / 2.0, 0.0), Vec2::new(w, 1.0))
-    } else {
-        let h = (img_aspect / target_aspect).clamp(0.01, 1.0);
-        Rect::from_min_size(Pos2::new(0.0, (1.0 - h) / 2.0), Vec2::new(1.0, h))
     }
 }
 
