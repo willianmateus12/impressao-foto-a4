@@ -1,0 +1,22 @@
+[package]
+name = "foto_a4"
+version = "1.0.0"
+edition = "2021"
+description = "Impressão de fotos em folha A4 com ajuste de bordas e ancoragem"
+
+[dependencies]
+eframe = "0.31"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "bmp", "webp", "tiff", "gif"] }
+rfd = "0.15"
+
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3", features = ["commdlg", "wingdi", "winbase", "windef", "minwindef", "winuser", "wincodec", "combaseapi", "objbase", "winnt", "wtypesbase", "unknwnbase"] }
+libheif-rs = "2.7"
+windows = { version = "0.58", features = ["Data_Pdf", "Storage", "Storage_Streams", "Foundation"] }
+
+[build-dependencies]
+winresource = "0.1"
+
+[profile.release]
+opt-level = 3
+lto = "thin"

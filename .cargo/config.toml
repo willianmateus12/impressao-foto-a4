@@ -1,0 +1,3 @@
+# libheif/libde265 estáticos vêm do vcpkg (triplet x64-windows-static-md)
+[env]
+VCPKG_ROOT = "C:\\tmp\\vcpkg"
